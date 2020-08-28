@@ -3,6 +3,7 @@ import React from 'react'
 import {Page, Box} from '../../components';
 
 const Game = () => {
+
   return (
     <Page>
       <Box>Game</Box>
@@ -11,3 +12,6 @@ const Game = () => {
 }
 
 export default Game;
+
+
+// hay room en el context, fetch <- del estado
