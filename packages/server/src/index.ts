@@ -1,13 +1,14 @@
-require("dotenv").config();
-const express = require("express");
-const https = require("https");
-const socketIO = require("socket.io");
-const fs = require("fs");
-const cors = require("cors");
-const morgan = require("morgan");
-const helmet = require("helmet");
-const path = require("path");
-const { fstat } = require("fs");
+import * as dotenv from "dotenv";
+import express from "express";
+import https from "https";
+import { Server } from "socket.io";
+import fs from "fs";
+import cors from "cors";
+import morgan from "morgan";
+import helmet from "helmet";
+import path from "path";
+
+dotenv.config();
 const app = express();
 const server = https.createServer(
   {
@@ -16,7 +17,7 @@ const server = https.createServer(
   },
   app
 );
-const io = socketIO(server);
+const io = new Server(server);
 
 // TODO set origin url
 app.use(cors());
@@ -24,11 +25,11 @@ app.use(morgan("tiny"));
 app.use(helmet());
 app.use(express.static("../web/build"));
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname + "/../../web/build/index.html"));
 });
 
-io.on("connection", (socket) => {
+io.on("connection", (_socket) => {
   console.log("a user connected");
 });
 
