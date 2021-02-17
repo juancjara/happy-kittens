@@ -120,14 +120,14 @@ function StatusButton(props: {
 }) {
   return (
     <Button
-      label={props.me.status == WaitPlayerStatus.READY ? "Wait" : "Ready"}
+      label={props.me.status === WaitPlayerStatus.READY ? "Wait" : "Ready"}
       onClick={() =>
         props.dispatch({
           action: "SET_STATUS",
           payload: {
             player: props.me.player,
             status:
-              props.me.status == WaitPlayerStatus.READY
+              props.me.status === WaitPlayerStatus.READY
                 ? WaitPlayerStatus.WAITING
                 : WaitPlayerStatus.READY,
           },

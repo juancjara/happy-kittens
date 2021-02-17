@@ -19,7 +19,7 @@ export function MiniGame(props: {
   const cells = [];
   for (let i = 0; i < 10; i++) {
     for (let j = 0; j < 10; j++) {
-      const pos = props.claimed.find(({ row, col }) => row === i && col == j);
+      const pos = props.claimed.find(({ row, col }) => row === i && col === j);
       const value = pos?.player && props.getEmoji(pos.player);
       cells.push(
         <div

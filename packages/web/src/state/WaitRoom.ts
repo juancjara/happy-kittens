@@ -1,7 +1,6 @@
 import { useReducer } from "react";
 import * as Player from "../core/Player";
 import * as User from "../core/User";
-import * as Room from "../core/Room";
 
 export enum WaitPlayerStatus {
   READY = "READY",
@@ -59,7 +58,7 @@ function reduce(state: WaitRoomState, msg: WaitRoomActions): WaitRoomState {
       return {
         ...state,
         players: state.players.map((wp) =>
-          wp.player == payload.player ? { ...wp, status: payload.status } : wp
+          wp.player === payload.player ? { ...wp, status: payload.status } : wp
         ),
       };
     }
@@ -67,7 +66,7 @@ function reduce(state: WaitRoomState, msg: WaitRoomActions): WaitRoomState {
       const { payload } = msg;
       return {
         ...state,
-        players: state.players.filter((wp) => wp.player != payload.player),
+        players: state.players.filter((wp) => wp.player !== payload.player),
       };
     }
     case "CLAIM": {
@@ -76,7 +75,7 @@ function reduce(state: WaitRoomState, msg: WaitRoomActions): WaitRoomState {
         ...state,
         claimed: [
           ...state.claimed.filter(
-            ({ row, col }) => !(row === payload.row && col == payload.col)
+            ({ row, col }) => !(row === payload.row && col === payload.col)
           ),
           payload,
         ],
@@ -96,9 +95,9 @@ export function useWaitRoom(
       player: Player.make({ id: String(ix), name: User.make(p) }),
       emoji: EMOJIES[ix % EMOJIES.length],
       status:
-        ix % 3 == 0 || p == user
+        ix % 3 === 0 || p === user
           ? WaitPlayerStatus.READY
-          : ix % 3 == 1
+          : ix % 3 === 1
           ? WaitPlayerStatus.WAITING
           : WaitPlayerStatus.DISCONNECTED,
     })),
@@ -113,10 +112,10 @@ export const Selectors = {
   },
 
   getUser(user: User.t, state: WaitRoomState) {
-    return state.players.find((wp) => wp.player.name == user);
+    return state.players.find((wp) => wp.player.name === user);
   },
 
   getEmoji(player: Player.t, state: WaitRoomState) {
-    return state.players.find((wp) => wp.player == player)?.emoji;
+    return state.players.find((wp) => wp.player === player)?.emoji;
   },
 };

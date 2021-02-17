@@ -1,22 +1,19 @@
 import { useEffect, useState } from "react";
 import * as CSS from "csstype";
 
+const TRANSITIONS = ["Loading", "Loading.", "Loading..", "Loading..."];
+
 function LoadingIndicator() {
-  const transitions = ["Loading"];
-  for (let i = 0; i < 3; i++) {
-    transitions.push(transitions[i] + ".");
-  }
   const [frame, setFrame] = useState(0);
   useEffect(() => {
-    console.log("hello");
     const token = setTimeout(
-      () => setFrame((frame) => (frame + 1) % transitions.length),
+      () => setFrame((frame) => (frame + 1) % TRANSITIONS.length),
       150
     );
     return () => clearTimeout(token);
   }, [frame]);
 
-  return <div style={{ alignSelf: "center" }}>{transitions[frame]} </div>;
+  return <div style={{ alignSelf: "center" }}>{TRANSITIONS[frame]} </div>;
 }
 
 function Loading() {
