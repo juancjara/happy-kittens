@@ -3,7 +3,6 @@ import express from "express";
 import https from "https";
 import { Server } from "socket.io";
 import fs from "fs";
-import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
 import path from "path";
@@ -33,13 +32,17 @@ app.get("/", (_req, res) => {
 app.post("/room", (req, res) => {
   const { handle } = req.body;
   const room = RoomStore.create(handle);
-  res.send({ ok: true, code: room.code });
+  res.send({ code: room.code });
 });
 
-app.post("/room/:id", (req, res) => {
+app.post("/room/:id/join", (req, res) => {
   const { handle } = req.body;
   const room = RoomStore.join(req.params.id, handle);
-  res.send({ ok: true, roomID: req.params.id });
+  if (room) {
+    res.send({ code: req.params.id });
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 io.on("connection", (_socket) => {

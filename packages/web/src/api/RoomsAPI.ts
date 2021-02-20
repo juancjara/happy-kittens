@@ -22,10 +22,10 @@ class RoomsAPI {
   }
 
   static async join(room: Room.t, handle: Handle.t): Promise<Room.t> {
-    const roomID = await post<string>(`room/${room}/join`, {
+    const { code } = await post<{ code: string }>(`room/${room}/join`, {
       handle,
     });
-    return Room.make(roomID);
+    return Room.make(code);
   }
 }
 

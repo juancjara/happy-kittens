@@ -40,7 +40,7 @@ function App() {
             moveToLoading();
             RoomsAPI.create(handle)
               .then((room) => moveToWaitRoom(room, handle))
-              .catch(moveToLanding);
+              .catch((err) => moveToLanding(JSON.stringify(err)));
           }}
           onJoin={(room: Room.t, handle: Handle.t) => {
             moveToLoading();
