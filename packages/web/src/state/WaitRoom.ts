@@ -1,6 +1,6 @@
 import { useReducer } from "react";
 import * as Player from "../core/Player";
-import * as User from "../core/User";
+import * as Handle from "../core/Handle";
 
 export enum WaitPlayerStatus {
   READY = "READY",
@@ -88,14 +88,14 @@ const MOCK_PLAYERS = ["Churretin", "Leo", "Lunita", "Goji", "Vagaso"];
 const EMOJIES = ["\u2763", "\u270B", "\u270C", "\u270A", "\u270D"];
 
 export function useWaitRoom(
-  user: User.t
+  handle: Handle.t
 ): [WaitRoomState, (action: WaitRoomActions) => void] {
   const [state, dispatch] = useReducer(reduce, {
-    players: [...MOCK_PLAYERS, user as string].map((p, ix) => ({
-      player: Player.make({ id: String(ix), name: User.make(p) }),
+    players: [...MOCK_PLAYERS, handle as string].map((p, ix) => ({
+      player: Player.make({ id: String(ix), handle: Handle.make(p) }),
       emoji: EMOJIES[ix % EMOJIES.length],
       status:
-        ix % 3 === 0 || p === user
+        ix % 3 === 0 || p === handle
           ? WaitPlayerStatus.READY
           : ix % 3 === 1
           ? WaitPlayerStatus.WAITING
@@ -111,8 +111,8 @@ export const Selectors = {
     return state.players.every((wp) => wp.status === WaitPlayerStatus.READY);
   },
 
-  getUser(user: User.t, state: WaitRoomState) {
-    return state.players.find((wp) => wp.player.name === user);
+  getPlayer(handle: Handle.t, state: WaitRoomState) {
+    return state.players.find((wp) => wp.player.handle === handle);
   },
 
   getEmoji(player: Player.t, state: WaitRoomState) {

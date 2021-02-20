@@ -1,9 +1,9 @@
 import type { Opaque } from "./Opaque";
-import * as User from "./User";
+import * as Handle from "./Handle";
 
 type $Player = {
   id: string;
-  name: User.t;
+  handle: Handle.t;
 };
 
 export type t = Opaque<"Player", $Player>;

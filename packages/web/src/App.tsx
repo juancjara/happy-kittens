@@ -3,7 +3,7 @@ import Landing from "./Landing";
 import Loading from "./Loading";
 import { useState } from "react";
 import * as Room from "./core/Room";
-import * as User from "./core/User";
+import * as Handle from "./core/Handle";
 import RoomsAPI from "./api/RoomsAPI";
 
 type LandingGameState = {
@@ -14,7 +14,7 @@ type LandingGameState = {
 type WaitRoomGameState = {
   type: "wait_room";
   room: Room.t;
-  user: User.t;
+  handle: Handle.t;
 };
 
 type LoadingGameState = {
@@ -28,25 +28,25 @@ function App() {
   const moveToLanding = (error?: string) =>
     setState({ type: "landing", error });
   const moveToLoading = () => setState({ type: "loading" });
-  const moveToWaitRoom = (room: Room.t, user: User.t) =>
-    setState({ type: "wait_room", room, user });
+  const moveToWaitRoom = (room: Room.t, handle: Handle.t) =>
+    setState({ type: "wait_room", room, handle });
 
   switch (state.type) {
     case "landing":
       return (
         <Landing
           error={state.error}
-          onCreate={(user: User.t) => {
+          onCreate={(handle: Handle.t) => {
             moveToLoading();
-            RoomsAPI.create(user)
-              .then((room) => moveToWaitRoom(room, user))
+            RoomsAPI.create(handle)
+              .then((room) => moveToWaitRoom(room, handle))
               .catch(moveToLanding);
           }}
-          onJoin={(room: Room.t, user: User.t) => {
+          onJoin={(room: Room.t, handle: Handle.t) => {
             moveToLoading();
-            RoomsAPI.join(room, user)
-              .then((room) => moveToWaitRoom(room, user))
-              .catch(moveToLanding);
+            RoomsAPI.join(room, handle)
+              .then((room) => moveToWaitRoom(room, handle))
+              .catch((err) => moveToLanding(JSON.stringify(err)));
           }}
         />
       );
@@ -54,7 +54,7 @@ function App() {
       return (
         <WaitRoom
           room={state.room}
-          user={state.user}
+          handle={state.handle}
           onLaunch={moveToLoading}
         />
       );

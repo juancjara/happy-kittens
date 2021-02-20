@@ -1,7 +1,7 @@
 import * as CSS from "csstype";
 import React, { useState } from "react";
 import * as Room from "./core/Room";
-import * as User from "./core/User";
+import * as Handle from "./core/Handle";
 import * as Player from "./core/Player";
 import {
   useWaitRoom,
@@ -96,7 +96,7 @@ function Players(props: {
               onMouseLeave={() => setHovered(null)}
             >
               {STATUS_EMOJIES[status]}
-              {` ${emoji} ${player.name} `}
+              {` ${emoji} ${player.handle} `}
               {hovered === player ? (
                 <button
                   onClick={() =>
@@ -137,15 +137,19 @@ function StatusButton(props: {
   );
 }
 
-function WaitRoom(props: { room: Room.t; user: User.t; onLaunch: () => void }) {
+function WaitRoom(props: {
+  room: Room.t;
+  handle: Handle.t;
+  onLaunch: () => void;
+}) {
   const style: CSS.Properties = {
     height: "100%",
     display: "grid",
     gridTemplateColumns: "60% auto",
     gridTemplateRows: "20% auto",
   };
-  const [state, dispatch] = useWaitRoom(props.user);
-  const me = Selectors.getUser(props.user, state);
+  const [state, dispatch] = useWaitRoom(props.handle);
+  const me = Selectors.getPlayer(props.handle, state);
   return (
     <div style={style}>
       <Cell align="center" justify="center">
