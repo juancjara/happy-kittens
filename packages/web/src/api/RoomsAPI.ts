@@ -1,4 +1,4 @@
-import * as Room from "../core/Room";
+import * as RoomCode from "../core/RoomCode";
 import * as Handle from "../core/Handle";
 
 async function post<T = void>(
@@ -16,16 +16,16 @@ async function post<T = void>(
 }
 
 class RoomsAPI {
-  static async create(handle: Handle.t): Promise<Room.t> {
+  static async create(handle: Handle.t): Promise<RoomCode.t> {
     const { code } = await post<{ code: string }>("room", { handle });
-    return Room.make(code);
+    return RoomCode.make(code);
   }
 
-  static async join(room: Room.t, handle: Handle.t): Promise<Room.t> {
+  static async join(room: RoomCode.t, handle: Handle.t): Promise<RoomCode.t> {
     const { code } = await post<{ code: string }>(`room/${room}/join`, {
       handle,
     });
-    return Room.make(code);
+    return RoomCode.make(code);
   }
 }
 

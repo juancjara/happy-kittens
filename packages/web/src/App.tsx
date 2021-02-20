@@ -2,7 +2,7 @@ import WaitRoom from "./WaitRoom";
 import Landing from "./Landing";
 import Loading from "./Loading";
 import { useState } from "react";
-import * as Room from "./core/Room";
+import * as RoomCode from "./core/RoomCode";
 import * as Handle from "./core/Handle";
 import RoomsAPI from "./api/RoomsAPI";
 
@@ -13,7 +13,7 @@ type LandingGameState = {
 
 type WaitRoomGameState = {
   type: "wait_room";
-  room: Room.t;
+  code: RoomCode.t;
   handle: Handle.t;
 };
 
@@ -28,8 +28,8 @@ function App() {
   const moveToLanding = (error?: string) =>
     setState({ type: "landing", error });
   const moveToLoading = () => setState({ type: "loading" });
-  const moveToWaitRoom = (room: Room.t, handle: Handle.t) =>
-    setState({ type: "wait_room", room, handle });
+  const moveToWaitRoom = (code: RoomCode.t, handle: Handle.t) =>
+    setState({ type: "wait_room", code, handle });
 
   switch (state.type) {
     case "landing":
@@ -39,13 +39,13 @@ function App() {
           onCreate={(handle: Handle.t) => {
             moveToLoading();
             RoomsAPI.create(handle)
-              .then((room) => moveToWaitRoom(room, handle))
+              .then((code) => moveToWaitRoom(code, handle))
               .catch((err) => moveToLanding(JSON.stringify(err)));
           }}
-          onJoin={(room: Room.t, handle: Handle.t) => {
+          onJoin={(code: RoomCode.t, handle: Handle.t) => {
             moveToLoading();
-            RoomsAPI.join(room, handle)
-              .then((room) => moveToWaitRoom(room, handle))
+            RoomsAPI.join(code, handle)
+              .then((code) => moveToWaitRoom(code, handle))
               .catch((err) => moveToLanding(JSON.stringify(err)));
           }}
         />
@@ -53,7 +53,7 @@ function App() {
     case "wait_room":
       return (
         <WaitRoom
-          room={state.room}
+          code={state.code}
           handle={state.handle}
           onLaunch={moveToLoading}
         />

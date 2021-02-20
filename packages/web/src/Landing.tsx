@@ -1,6 +1,6 @@
 import type * as CSS from "csstype";
 import { CSSProperties, useState } from "react";
-import * as Room from "./core/Room";
+import * as RoomCode from "./core/RoomCode";
 import * as Handle from "./core/Handle";
 
 function Row(props: {
@@ -59,18 +59,18 @@ function Button(props: { label: string; onClick: () => void }) {
   );
 }
 
-function JoinButton(props: { onJoin: (room: Room.t) => void }) {
+function JoinButton(props: { onJoin: (code: RoomCode.t) => void }) {
   const [intent, setIntent] = useState(false);
-  const [room, setRoom] = useState(Room.make(""));
+  const [code, setRoomCode] = useState(RoomCode.make(""));
   if (intent) {
     return (
       <div>
         Room:{" "}
         <input
-          defaultValue={room}
-          onBlur={(e) => setRoom(Room.make(e.target.value))}
+          defaultValue={code}
+          onBlur={(e) => setRoomCode(RoomCode.make(e.target.value))}
         ></input>
-        <button onClick={() => props.onJoin(room)}> Go! </button>
+        <button onClick={() => props.onJoin(code)}> Go! </button>
       </div>
     );
   }
@@ -103,7 +103,7 @@ function ErrorToast(props: { message: string }) {
 function Landing(props: {
   error?: string;
   onCreate: (handle: Handle.t) => void;
-  onJoin: (room: Room.t, handle: Handle.t) => void;
+  onJoin: (code: RoomCode.t, handle: Handle.t) => void;
 }) {
   const style: CSS.Properties = {
     height: "100%",
@@ -123,7 +123,7 @@ function Landing(props: {
       <Row start={3} justify="center">
         <HandleInput value={handle} onChange={setHandle} />
         <Button label={"Create"} onClick={() => props.onCreate(handle)} />
-        <JoinButton onJoin={(room) => props.onJoin(room, handle)} />
+        <JoinButton onJoin={(code) => props.onJoin(code, handle)} />
       </Row>
     </div>
   );

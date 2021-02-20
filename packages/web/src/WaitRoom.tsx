@@ -1,6 +1,6 @@
 import * as CSS from "csstype";
 import React, { useState } from "react";
-import * as Room from "./core/Room";
+import * as RoomCode from "./core/RoomCode";
 import * as Handle from "./core/Handle";
 import * as Player from "./core/Player";
 import {
@@ -67,8 +67,8 @@ function Hero() {
   return <div style={style}> Happy Kitties </div>;
 }
 
-function Code(props: { room: Room.t }) {
-  return <span>Code: {props.room}</span>;
+function Code(props: { value: RoomCode.t }) {
+  return <span>Code: {props.value}</span>;
 }
 
 const STATUS_EMOJIES = {
@@ -138,7 +138,7 @@ function StatusButton(props: {
 }
 
 function WaitRoom(props: {
-  room: Room.t;
+  code: RoomCode.t;
   handle: Handle.t;
   onLaunch: () => void;
 }) {
@@ -156,7 +156,7 @@ function WaitRoom(props: {
         <Hero />
       </Cell>
       <Cell align="center" justify="center">
-        <Code room={props.room} />
+        <Code value={props.code} />
       </Cell>
       <Cell>
         <div style={{ height: "60%" }}>
