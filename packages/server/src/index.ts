@@ -7,6 +7,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import path from "path";
 import RoomStore from "./RoomStore";
+import { PlayerStatus, Room } from "shared/lib/Room";
 
 dotenv.config();
 const app = express();
@@ -39,14 +40,48 @@ app.post("/room/:id/join", (req, res) => {
   const { handle } = req.body;
   const room = RoomStore.join(req.params.id, handle);
   if (room) {
+    RoomStore.set(room.code, room);
     res.send({ code: req.params.id });
+    io.to(room.code).emit("player_joined", {
+      serialized_player: room.players.get(handle)?.serialize(),
+    });
   } else {
     res.sendStatus(404);
   }
 });
 
-io.on("connection", (_socket) => {
-  console.log("a user connected");
+io.use((socket, next) => {
+  const { handle, code } = socket.handshake.auth;
+  if (!handle) {
+    return next(new Error("Missing handle"));
+  } else if (!RoomStore.get(code)) {
+    return next(new Error("Room doesn't exist"));
+  }
+  next();
+});
+
+io.on("connection", (socket) => {
+  const { code } = socket.handshake.auth;
+  const room = RoomStore.getEnforce(code);
+  socket.join(room.code);
+  socket.emit("room_sync", room.serialize());
+  socket.on("player_remove", (payload: { handle: string }) => {
+    const room = RoomStore.get(code);
+    if (room) {
+      RoomStore.set(code, room.remove(payload.handle));
+      socket.to(code).emit("player_remove", payload);
+    }
+  });
+  socket.on(
+    "player_set_status",
+    (payload: { handle: string; status: PlayerStatus }) => {
+      const room = RoomStore.get(code);
+      if (room) {
+        RoomStore.set(code, room.setStatus(payload.handle, payload.status));
+        socket.to(code).emit("player_set_status", payload);
+      }
+    }
+  );
 });
 
 server.listen(process.env.PORT, () => {

@@ -1,4 +1,4 @@
-import type { Opaque } from "./Opaque";
+import type { Opaque } from "shared/src/Opaque";
 
 export type t = Opaque<"RoomCode", string>;
 

@@ -1,121 +1,96 @@
-import { useReducer } from "react";
-import * as Player from "../core/Player";
+import { useEffect, useReducer } from "react";
 import * as Handle from "../core/Handle";
-
-export enum WaitPlayerStatus {
-  READY = "READY",
-  WAITING = "WAITING",
-  DISCONNECTED = "DISCONNECTED",
-}
-
-export type WaitRoomPlayer = {
-  player: Player.t;
-  emoji: string;
-  status: WaitPlayerStatus;
-};
-
-export type Position = {
-  row: number;
-  col: number;
-  player: Player.t;
-};
-
-type WaitRoomState = {
-  players: Array<WaitRoomPlayer>;
-  claimed: Array<Position>;
-};
-
+import Socket from "../api/Socket";
+import { Room } from "shared/lib";
+import { PlayerStatus } from "shared/lib/Room";
+import { Player } from "shared/src/Room";
 type Action<ID, Payload> = { action: ID; payload: Payload };
 
 type SetStatus = Action<
-  "SET_STATUS",
+  "player_set_status",
   {
-    player: Player.t;
-    status: WaitPlayerStatus;
+    handle: string;
+    status: PlayerStatus;
   }
 >;
 type Remove = Action<
-  "REMOVE",
+  "player_remove",
   {
-    player: Player.t;
+    handle: string;
   }
 >;
 type Claim = Action<
   "CLAIM",
   {
-    player: Player.t;
+    handle: string;
     row: number;
     col: number;
   }
 >;
 
-export type WaitRoomActions = SetStatus | Remove | Claim;
+type Join = Action<
+  "player_joined",
+  {
+    serialized_player: string;
+  }
+>;
 
-function reduce(state: WaitRoomState, msg: WaitRoomActions): WaitRoomState {
+type Sync = Action<
+  "room_sync",
+  {
+    serialized: string;
+  }
+>;
+
+export type WaitRoomActions = SetStatus | Remove | Claim | Join | Sync;
+
+function reduce(room: Room, msg: WaitRoomActions): Room {
   switch (msg.action) {
-    case "SET_STATUS": {
+    case "player_set_status": {
       const { payload } = msg;
-      return {
-        ...state,
-        players: state.players.map((wp) =>
-          wp.player === payload.player ? { ...wp, status: payload.status } : wp
-        ),
-      };
+      return room.setStatus(payload.handle, payload.status);
     }
-    case "REMOVE": {
+    case "player_remove": {
       const { payload } = msg;
-      return {
-        ...state,
-        players: state.players.filter((wp) => wp.player !== payload.player),
-      };
+      return room.remove(payload.handle);
     }
     case "CLAIM": {
       const { payload } = msg;
-      return {
-        ...state,
-        claimed: [
-          ...state.claimed.filter(
-            ({ row, col }) => !(row === payload.row && col === payload.col)
-          ),
-          payload,
-        ],
-      };
+      return room;
+    }
+    case "player_joined": {
+      const { payload } = msg;
+      return room.addPlayer(Player.from(payload.serialized_player));
+    }
+    case "room_sync": {
+      const { payload } = msg;
+      return Room.from(payload.serialized);
     }
   }
 }
 
-const MOCK_PLAYERS = ["Churretin", "Leo", "Lunita", "Goji", "Vagaso"];
-const EMOJIES = ["\u2763", "\u270B", "\u270C", "\u270A", "\u270D"];
-
 export function useWaitRoom(
-  handle: Handle.t
-): [WaitRoomState, (action: WaitRoomActions) => void] {
-  const [state, dispatch] = useReducer(reduce, {
-    players: [...MOCK_PLAYERS, handle as string].map((p, ix) => ({
-      player: Player.make({ id: String(ix), handle: Handle.make(p) }),
-      emoji: EMOJIES[ix % EMOJIES.length],
-      status:
-        ix % 3 === 0 || p === handle
-          ? WaitPlayerStatus.READY
-          : ix % 3 === 1
-          ? WaitPlayerStatus.WAITING
-          : WaitPlayerStatus.DISCONNECTED,
-    })),
-    claimed: [],
-  });
-  return [state, dispatch];
+  handle: Handle.t,
+  socket: Socket
+): [Room, (action: WaitRoomActions) => void] {
+  const [state, dispatch] = useReducer(reduce, socket.room);
+  useEffect(() => {
+    return socket.onMessage((action: any, payload: any) => {
+      if (
+        action === "player_joined" ||
+        action === "player_remove" ||
+        action === "player_set_status" ||
+        action === "room_sync"
+      ) {
+        dispatch({ action, payload });
+      }
+    });
+  }, [socket]);
+  return [
+    state,
+    (message) => {
+      socket.broadcast(message);
+      dispatch(message);
+    },
+  ];
 }
-
-export const Selectors = {
-  allReady(state: WaitRoomState) {
-    return state.players.every((wp) => wp.status === WaitPlayerStatus.READY);
-  },
-
-  getPlayer(handle: Handle.t, state: WaitRoomState) {
-    return state.players.find((wp) => wp.player.handle === handle);
-  },
-
-  getEmoji(player: Player.t, state: WaitRoomState) {
-    return state.players.find((wp) => wp.player === player)?.emoji;
-  },
-};

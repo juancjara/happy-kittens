@@ -1,18 +1,10 @@
+import { Room } from "shared";
+
 type RoomCode = string;
 
-const ROOMS = new Map();
+const ROOMS: Map<RoomCode, Room> = new Map();
 
 const ALPHA = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-class Room {
-  constructor(public code: string, public players: Array<string>) {}
-  join(handle: string): Room {
-    if (this.players.some((p) => p === handle)) {
-      return this;
-    }
-    return new Room(this.code, [...this.players, handle]);
-  }
-}
 
 function getRandomCode() {
   let code = "";
@@ -28,22 +20,42 @@ function create(handle: string): Room {
   while (ROOMS.get(code) != null) {
     code = getRandomCode();
   }
-  const room = new Room(code, [handle]);
+  const room = Room.forHost(code, handle);
   ROOMS.set(code, room);
   return room;
 }
 
-function join(code: RoomCode, handle: string): Room | null {
+function get(code: RoomCode): Room | undefined {
+  const room = ROOMS.get(code);
+  return room;
+}
+
+function getEnforce(code: RoomCode): Room {
   const room = ROOMS.get(code);
   if (!room) {
-    return null;
+    throw new Error("Room doesn't exist");
+  }
+  return room;
+}
+
+function join(code: RoomCode, handle: string): Room | undefined {
+  const room = get(code);
+  if (!room) {
+    return undefined;
   }
   const joined = room.join(handle);
   ROOMS.set(code, joined);
   return joined;
 }
 
+function set(code: RoomCode, room: Room): void {
+  ROOMS.set(code, room);
+}
+
 export default {
+  get,
+  getEnforce,
+  set,
   create,
   join,
 };

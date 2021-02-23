@@ -1,11 +1,14 @@
 import * as CSS from "csstype";
-import * as Player from "./core/Player";
-import { Position } from "./state/WaitRoom";
+
+export type Position = {
+  row: number;
+  col: number;
+};
 
 export function MiniGame(props: {
   claimed: Array<Position>;
   onClaim: (row: number, col: number) => void;
-  getEmoji: (player: Player.t) => string | undefined;
+  //  getEmoji: (player: Player.t) => string | undefined;
 }) {
   const style: CSS.Properties = {
     display: "grid",
@@ -20,7 +23,7 @@ export function MiniGame(props: {
   for (let i = 0; i < 10; i++) {
     for (let j = 0; j < 10; j++) {
       const pos = props.claimed.find(({ row, col }) => row === i && col === j);
-      const value = pos?.player && props.getEmoji(pos.player);
+      const value = ""; // pos?.player && ""; // props.getEmoji(pos.player);
       cells.push(
         <div
           key={`cell-${i}-${j}`}

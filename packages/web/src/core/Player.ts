@@ -1,4 +1,4 @@
-import type { Opaque } from "./Opaque";
+import type { Opaque } from "shared/src/Opaque";
 import * as Handle from "./Handle";
 
 type $Player = {
