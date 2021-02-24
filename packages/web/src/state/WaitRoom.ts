@@ -20,7 +20,7 @@ type Remove = Action<
   }
 >;
 type Claim = Action<
-  "CLAIM",
+  "minigame_claim",
   {
     handle: string;
     row: number;
@@ -54,9 +54,9 @@ function reduce(room: Room, msg: WaitRoomActions): Room {
       const { payload } = msg;
       return room.remove(payload.handle);
     }
-    case "CLAIM": {
+    case "minigame_claim": {
       const { payload } = msg;
-      return room;
+      return room.claimForMinigame(payload.handle, payload.row, payload.col);
     }
     case "player_joined": {
       const { payload } = msg;
@@ -80,7 +80,8 @@ export function useWaitRoom(
         action === "player_joined" ||
         action === "player_remove" ||
         action === "player_set_status" ||
-        action === "room_sync"
+        action === "room_sync" ||
+        action === "minigame_claim"
       ) {
         dispatch({ action, payload });
       }

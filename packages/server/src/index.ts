@@ -82,6 +82,19 @@ io.on("connection", (socket) => {
       }
     }
   );
+  socket.on(
+    "minigame_claim",
+    (payload: { handle: string; row: number; col: number }) => {
+      const room = RoomStore.get(code);
+      if (room) {
+        RoomStore.set(
+          code,
+          room.claimForMinigame(payload.handle, payload.row, payload.col)
+        );
+        socket.to(code).emit("minigame_claim", payload);
+      }
+    }
+  );
 });
 
 server.listen(process.env.PORT, () => {

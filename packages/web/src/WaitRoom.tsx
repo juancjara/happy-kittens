@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import * as Handle from "./core/Handle";
 import { Player } from "shared/src/Room";
 import { useWaitRoom, WaitRoomActions } from "./state/WaitRoom";
-import { MiniGame } from "./MiniGame";
+import { MiniGameContainer } from "./MiniGameContainer";
 import Socket from "./api/Socket";
 import { PlayerMap, PlayerStatus } from "shared/lib/Room";
 
@@ -148,6 +148,9 @@ function WaitRoom(props: {
   };
   const [room, dispatch] = useWaitRoom(props.handle, props.socket);
   const me = room.players.get(props.handle);
+  if (!me) {
+    return <div> You got disconnected from the room. </div>;
+  }
   return (
     <div style={style}>
       <Cell align="center" justify="center">
@@ -158,27 +161,25 @@ function WaitRoom(props: {
       </Cell>
       <Cell>
         <div style={{ height: "60%" }}>
-          {me &&
-            /*
-            <MiniGame
-              claimed={[]}
+          {
+            <MiniGameContainer
+              players={room.players}
+              minigame={room.minigame}
               onClaim={(row, col) =>
                 dispatch({
-                  action: "CLAIM",
-                  payload: { row, col, player: me.player },
+                  action: "minigame_claim",
+                  payload: { row, col, handle: me.handle },
                 })
               }
-              getEmoji={(player) => player.getEmoji()}
             />
-           */
-            true}
+          }
         </div>
         <div style={{ height: "10%" }}>
           <Flex>
             {me && <StatusButton me={me} dispatch={dispatch} />}
             <Button
               label="Launch"
-              disabled={room.areAllPlayersReady()}
+              disabled={!room.areAllPlayersReady()}
               onClick={props.onLaunch}
             />
           </Flex>

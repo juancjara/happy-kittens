@@ -81,44 +81,97 @@ export class PlayerMap {
   }
 }
 
+export class MiniGame {
+  constructor(
+    private claimed: Array<{ x: number; y: number; handle: string }>
+  ) {}
+
+  getEmojiAt(players: PlayerMap, x: number, y: number): string | undefined {
+    const position = this.claimed.find((p) => p.x === x && p.y === y);
+    if (!position) {
+      return undefined;
+    }
+    return players.get(position.handle)?.emoji;
+  }
+  claim(handle: string, x: number, y: number) {
+    this.claimed = this.claimed.filter((p) => !(p.x === x && p.y === y));
+    this.claimed.push({ handle, x, y });
+    return new MiniGame(this.claimed);
+  }
+  static from(serialized: any): MiniGame {
+    return new MiniGame(JSON.parse(serialized));
+  }
+  serialize(): string {
+    return JSON.stringify(this.claimed);
+  }
+}
+
 export class Room {
-  constructor(public code: string, public players: PlayerMap) {}
+  constructor(
+    public code: string,
+    public players: PlayerMap,
+    public minigame: MiniGame
+  ) {}
 
   static forHost(code: string, host: string): Room {
-    return new Room(code, new PlayerMap(new Map([[host, new Player(host)]])));
+    return new Room(
+      code,
+      new PlayerMap(new Map([[host, new Player(host)]])),
+      new MiniGame([])
+    );
   }
   join(handle: string): Room {
     if (this.players.has(handle)) {
       return this;
     }
 
-    return new Room(this.code, this.players.set(handle, new Player(handle)));
+    return new Room(
+      this.code,
+      this.players.set(handle, new Player(handle)),
+      this.minigame
+    );
   }
 
   addPlayer(player: Player): Room {
-    return new Room(this.code, this.players.set(player.handle, player));
+    return new Room(
+      this.code,
+      this.players.set(player.handle, player),
+      this.minigame
+    );
   }
 
   remove(handle: string): Room {
     if (!this.players.has(handle)) {
       return this;
     }
-    return new Room(this.code, this.players.remove(handle));
+    return new Room(this.code, this.players.remove(handle), this.minigame);
   }
   areAllPlayersReady(): boolean {
     return this.players.areAllReady();
   }
   setStatus(handle: string, status: PlayerStatus): Room {
-    return new Room(this.code, this.players.setStatus(handle, status));
+    return new Room(
+      this.code,
+      this.players.setStatus(handle, status),
+      this.minigame
+    );
+  }
+  claimForMinigame(handle: string, x: number, y: number): Room {
+    return new Room(this.code, this.players, this.minigame.claim(handle, x, y));
   }
   serialize(): string {
     return JSON.stringify({
       code: this.code,
+      minigame: this.minigame.serialize(),
       players: this.players.serialize(),
     });
   }
   static from(serialized: string) {
     const blob = JSON.parse(serialized);
-    return new Room(blob.code, PlayerMap.from(blob.players));
+    return new Room(
+      blob.code,
+      PlayerMap.from(blob.players),
+      MiniGame.from(blob.minigame)
+    );
   }
 }
