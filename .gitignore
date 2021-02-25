@@ -139,6 +139,9 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# vscode
+.vscode
+
 ### react ###
 .DS_*
 **/*.backup.*
@@ -265,6 +268,10 @@ fabric.properties
 # modules.xml
 # .idea/misc.xml
 # *.ipr
+
+# certificates
+*.crt
+*.key
 
 # Sonarlint plugin
 # https://plugins.jetbrains.com/plugin/7973-sonarlint

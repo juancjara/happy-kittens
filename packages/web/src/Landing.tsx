@@ -1,7 +1,7 @@
 import type * as CSS from "csstype";
 import { CSSProperties, useState } from "react";
-import * as Room from "./core/Room";
-import * as User from "./core/User";
+import * as RoomCode from "./core/RoomCode";
+import * as Handle from "./core/Handle";
 
 function Row(props: {
   start?: number;
@@ -20,13 +20,16 @@ function Row(props: {
   return <div style={style}>{props.children}</div>;
 }
 
-function Username(props: { value: User.t; onChange: (value: User.t) => void }) {
+function HandleInput(props: {
+  value: Handle.t;
+  onChange: (value: Handle.t) => void;
+}) {
   return (
     <div style={{ textAlign: "center" }}>
       Handle:{" "}
       <input
         defaultValue={props.value}
-        onBlur={(e) => props.onChange(User.make(e.target.value))}
+        onBlur={(e) => props.onChange(Handle.make(e.target.value))}
       ></input>
     </div>
   );
@@ -56,18 +59,18 @@ function Button(props: { label: string; onClick: () => void }) {
   );
 }
 
-function JoinButton(props: { onJoin: (room: Room.t) => void }) {
+function JoinButton(props: { onJoin: (code: RoomCode.t) => void }) {
   const [intent, setIntent] = useState(false);
-  const [room, setRoom] = useState(Room.make(""));
+  const [code, setRoomCode] = useState(RoomCode.make(""));
   if (intent) {
     return (
       <div>
         Room:{" "}
         <input
-          defaultValue={room}
-          onBlur={(e) => setRoom(Room.make(e.target.value))}
+          defaultValue={code}
+          onBlur={(e) => setRoomCode(RoomCode.make(e.target.value))}
         ></input>
-        <button onClick={() => props.onJoin(room)}> Go! </button>
+        <button onClick={() => props.onJoin(code)}> Go! </button>
       </div>
     );
   }
@@ -99,8 +102,8 @@ function ErrorToast(props: { message: string }) {
 
 function Landing(props: {
   error?: string;
-  onCreate: (user: User.t) => void;
-  onJoin: (room: Room.t, user: User.t) => void;
+  onCreate: (handle: Handle.t) => void;
+  onJoin: (code: RoomCode.t, handle: Handle.t) => void;
 }) {
   const style: CSS.Properties = {
     height: "100%",
@@ -108,7 +111,7 @@ function Landing(props: {
     gridTemplateColumns: "30% auto 30%",
     gridTemplateRows: "30% 20%",
   };
-  const [user, setUser] = useState(User.make(""));
+  const [handle, setHandle] = useState(Handle.make(""));
   return (
     <div style={style}>
       <Row align="center" justify="center">
@@ -118,9 +121,9 @@ function Landing(props: {
         <Hero />
       </Row>
       <Row start={3} justify="center">
-        <Username value={user} onChange={setUser} />
-        <Button label={"Create"} onClick={() => props.onCreate(user)} />
-        <JoinButton onJoin={(room) => props.onJoin(room, user)} />
+        <HandleInput value={handle} onChange={setHandle} />
+        <Button label={"Create"} onClick={() => props.onCreate(handle)} />
+        <JoinButton onJoin={(code) => props.onJoin(code, handle)} />
       </Row>
     </div>
   );

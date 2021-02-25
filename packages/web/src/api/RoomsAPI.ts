@@ -1,24 +1,31 @@
+import * as RoomCode from "../core/RoomCode";
+import * as Handle from "../core/Handle";
 
-import * as Room from "../core/Room";
-import * as User from "../core/User";
+async function post<T = void>(
+  path: T extends void ? "You must provide a type parameter" : string,
+  body?: Object
+): Promise<T> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  return (await res.json()) as T;
+}
 
 class RoomsAPI {
-  static create(user: User.t): Promise<Room.t> {
-    return new Promise<Room.t>((resolve, _) => {
-      setTimeout(() => resolve(Room.make(user)), 1000);
-    });
+  static async create(handle: Handle.t): Promise<RoomCode.t> {
+    const { code } = await post<{ code: string }>("room", { handle });
+    return RoomCode.make(code);
   }
 
-  static join(room: Room.t, user: User.t): Promise<Room.t> {
-    return new Promise<Room.t>((_, reject) => {
-      setTimeout(
-        () =>
-          reject(
-            `Failed to join ${room} as ${user}. Verify that the room exist`
-          ),
-        1000
-      );
+  static async join(room: RoomCode.t, handle: Handle.t): Promise<RoomCode.t> {
+    const { code } = await post<{ code: string }>(`room/${room}/join`, {
+      handle,
     });
+    return RoomCode.make(code);
   }
 }
 

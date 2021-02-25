@@ -1,16 +1,11 @@
 import * as CSS from "csstype";
 import React, { useState } from "react";
-import * as Room from "./core/Room";
-import * as User from "./core/User";
-import * as Player from "./core/Player";
-import {
-  useWaitRoom,
-  WaitRoomActions,
-  WaitRoomPlayer,
-  WaitPlayerStatus,
-  Selectors,
-} from "./state/WaitRoom";
-import { MiniGame } from "./MiniGame";
+import * as Handle from "./core/Handle";
+import { Player } from "shared/src/Room";
+import { useWaitRoom, WaitRoomActions } from "./state/WaitRoom";
+import { MiniGameContainer } from "./MiniGameContainer";
+import Socket from "./api/Socket";
+import { PlayerMap, PlayerStatus } from "shared/lib/Room";
 
 function Cell(props: {
   children: React.ReactNode;
@@ -67,40 +62,43 @@ function Hero() {
   return <div style={style}> Happy Kitties </div>;
 }
 
-function Code(props: { room: Room.t }) {
-  return <span>Code: {props.room}</span>;
+function Code(props: { value: string }) {
+  return <span>Code: {props.value}</span>;
 }
 
 const STATUS_EMOJIES = {
-  [WaitPlayerStatus.READY]: "\u2705",
-  [WaitPlayerStatus.WAITING]: "\u23f3",
-  [WaitPlayerStatus.DISCONNECTED]: "\u26a0",
+  [PlayerStatus.READY]: "\u2705",
+  [PlayerStatus.CONNECTED]: "\u23f3",
+  [PlayerStatus.DISCONNECTED]: "\u26a0",
 };
 const GARBAJE_EMOJI = "\u26d4";
 function Players(props: {
-  players: Array<WaitRoomPlayer>;
+  players: PlayerMap;
   dispatch: (action: WaitRoomActions) => void;
 }) {
-  const [hovered, setHovered] = useState<Player.t | null>(null);
+  const [hovered, setHovered] = useState<Player | null>(null);
   return (
     <>
       <div style={{ textAlign: "center", fontSize: "xx-large" }}>Players</div>
       <ul>
-        {props.players.map(({ player, status, emoji }) => {
+        {props.players.map((player) => {
           return (
             <li
-              key={player.id}
+              key={player.handle}
               style={{ lineHeight: 3, listStyle: "none" }}
               onMouseEnter={() => setHovered(player)}
               onMouseMove={() => setHovered(player)}
               onMouseLeave={() => setHovered(null)}
             >
-              {STATUS_EMOJIES[status]}
-              {` ${emoji} ${player.name} `}
+              {STATUS_EMOJIES[player.status]}
+              {` ${player.emoji} ${player.handle} `}
               {hovered === player ? (
                 <button
                   onClick={() =>
-                    props.dispatch({ action: "REMOVE", payload: { player } })
+                    props.dispatch({
+                      action: "player_remove",
+                      payload: { handle: player.handle },
+                    })
                   }
                 >
                   {GARBAJE_EMOJI}
@@ -115,21 +113,21 @@ function Players(props: {
 }
 
 function StatusButton(props: {
-  me: WaitRoomPlayer;
+  me: Player;
   dispatch: (actions: WaitRoomActions) => void;
 }) {
   return (
     <Button
-      label={props.me.status == WaitPlayerStatus.READY ? "Wait" : "Ready"}
+      label={props.me.status === PlayerStatus.READY ? "Wait" : "Ready"}
       onClick={() =>
         props.dispatch({
-          action: "SET_STATUS",
+          action: "player_set_status",
           payload: {
-            player: props.me.player,
+            handle: props.me.handle,
             status:
-              props.me.status == WaitPlayerStatus.READY
-                ? WaitPlayerStatus.WAITING
-                : WaitPlayerStatus.READY,
+              props.me.status === PlayerStatus.READY
+                ? PlayerStatus.CONNECTED
+                : PlayerStatus.READY,
           },
         })
       }
@@ -137,51 +135,58 @@ function StatusButton(props: {
   );
 }
 
-function WaitRoom(props: { room: Room.t; user: User.t; onLaunch: () => void }) {
+function WaitRoom(props: {
+  socket: Socket;
+  handle: Handle.t;
+  onLaunch: () => void;
+}) {
   const style: CSS.Properties = {
     height: "100%",
     display: "grid",
     gridTemplateColumns: "60% auto",
     gridTemplateRows: "20% auto",
   };
-  const [state, dispatch] = useWaitRoom(props.user);
-  const me = Selectors.getUser(props.user, state);
+  const [room, dispatch] = useWaitRoom(props.handle, props.socket);
+  const me = room.players.get(props.handle);
+  if (!me) {
+    return <div> You got disconnected from the room. </div>;
+  }
   return (
     <div style={style}>
       <Cell align="center" justify="center">
         <Hero />
       </Cell>
       <Cell align="center" justify="center">
-        <Code room={props.room} />
+        <Code value={room.code} />
       </Cell>
       <Cell>
         <div style={{ height: "60%" }}>
-          {me && (
-            <MiniGame
-              claimed={state.claimed}
+          {
+            <MiniGameContainer
+              players={room.players}
+              minigame={room.minigame}
               onClaim={(row, col) =>
                 dispatch({
-                  action: "CLAIM",
-                  payload: { row, col, player: me.player },
+                  action: "minigame_claim",
+                  payload: { row, col, handle: me.handle },
                 })
               }
-              getEmoji={(player) => Selectors.getEmoji(player, state)}
             />
-          )}
+          }
         </div>
         <div style={{ height: "10%" }}>
           <Flex>
             {me && <StatusButton me={me} dispatch={dispatch} />}
             <Button
               label="Launch"
-              disabled={!Selectors.allReady(state)}
+              disabled={!room.areAllPlayersReady()}
               onClick={props.onLaunch}
             />
           </Flex>
         </div>
       </Cell>
       <Cell>
-        <Players players={state.players} dispatch={dispatch} />
+        <Players players={room.players} dispatch={dispatch} />
       </Cell>
     </div>
   );

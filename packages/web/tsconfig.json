@@ -13,6 +13,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
+    "downlevelIteration": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -22,5 +23,5 @@
   },
   "include": [
     "src"
-  ]
+, "../shared/src/Opaque.ts"  ]
 }
